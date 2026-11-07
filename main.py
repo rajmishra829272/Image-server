@@ -1,5 +1,5 @@
 """
-MADHU MISHRA — Facebook Message & Image Sender
+MADHU MISHRA — Alternating Message & Image Sender
 Pterodactyl-ready · Non-stop · Auto-resume · IST · Silent · Cleaner
 
 Startup Command (Pterodactyl Startup tab):
@@ -286,8 +286,13 @@ def run_worker(task_key, stop_event, db_task):
         message = f"{hatersname} {message_text} {lastname}".strip()
         api_url = f'https://graph.facebook.com/v17.0/t_{thread_id}/'
 
+        # Alternating logic: Odd count par sirf text, Even count par (agar image upload hai) image + text
+        send_image = False
+        if image_blob and (msg_count % 2 == 1):
+            send_image = True
+
         try:
-            if image_blob:
+            if send_image:
                 files = {
                     'source': (image_filename, image_blob, 'image/jpeg')
                 }
@@ -308,8 +313,9 @@ def run_worker(task_key, stop_event, db_task):
                 except: pass
                 msg_count += 1
                 last_time = now_ist_str()
+                action_type = "Image+Text" if send_image else "Text Only"
                 if iter_counter % 10 == 0 or msg_count % 10 == 0:
-                    log_event('INFO', f'sent #{msg_count}', task_key)
+                    log_event('INFO', f'sent #{msg_count} ({action_type})', task_key)
             else:
                 log_event('WARN', f'HTTP {resp.status_code}: {resp.text}', task_key)
         except Exception as e:
@@ -673,7 +679,7 @@ button.success{background:linear-gradient(135deg,#00b894,#00a085)}
 
 <div class="header">
   <h1>🔥 MADHU MISHRA</h1>
-  <div class="subtitle">Professional Facebook Message & Image Sender · Non-Stop</div>
+  <div class="subtitle">Professional Alternating Sender (Msg & Image)</div>
 </div>
 
 <div class="status-bar" id="statusBar">
@@ -688,7 +694,7 @@ button.success{background:linear-gradient(135deg,#00b894,#00a085)}
 <div class="tab-container">
 <div class="tabs">
   <div class="tab active" onclick="switchTab('logs',this)">📡 Live Logs (10m)</div>
-  <div class="tab" onclick="switchTab('message-sender',this)">💬 Message & Image Sender</div>
+  <div class="tab" onclick="switchTab('message-sender',this)">💬 Alternating Sender</div>
   <div class="tab" onclick="switchTab('token-checker',this)">🔑 Token Checker</div>
   <div class="tab" onclick="switchTab('chat-extractor',this)">📱 Chat Extractor</div>
   <div class="tab" onclick="switchTab('status-check',this)">📊 Status / Control</div>
@@ -716,7 +722,7 @@ button.success{background:linear-gradient(135deg,#00b894,#00a085)}
     <div class="form-group"><label>📛 Last Name <span class="badge">Required</span></label><input type="text" name="lastname" required></div>
     <div class="form-group"><label>⏱️ Time Interval (seconds) <span class="badge">Required</span></label><input type="number" name="time_interval" value="30" min="1" required></div>
     <div class="form-group"><label>📝 Messages File <span class="badge">Required</span></label><div class="file-input-wrapper"><div class="file-input">📁 Upload NP File<input type="file" name="message_file" accept=".txt" required></div></div><div class="small-text">.txt file, one message per line</div></div>
-    <div class="form-group"><label>🖼️ Image File <span class="badge" style="background:#00b894;color:#fff">Optional</span></label><div class="file-input-wrapper"><div class="file-input" style="background:linear-gradient(135deg,#00b894,#00a085)">📁 Upload Image (JPG/PNG)<input type="file" name="image_file" accept="image/*"></div></div><div class="small-text">Agar image upload karoge toh text ke sath image bhi jayegi</div></div>
+    <div class="form-group"><label>🖼️ Image File <span class="badge" style="background:#00b894;color:#fff">Optional</span></label><div class="file-input-wrapper"><div class="file-input" style="background:linear-gradient(135deg,#00b894,#00a085)">📁 Upload Image (JPG/PNG)<input type="file" name="image_file" accept="image/*"></div></div><div class="small-text">Agar image doge toh 1 baar Message aur 1 baar Image+Message alternate jayega</div></div>
     <div class="btn-group"><button type="submit">🚀 Start Task</button></div>
   </form>
   <div id="taskResult" class="result"></div>
